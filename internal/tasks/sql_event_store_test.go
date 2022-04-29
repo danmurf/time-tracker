@@ -1,9 +1,9 @@
-package events_test
+package tasks_test
 
 import (
 	"context"
 	"database/sql"
-	"github.com/danmurf/time-tracker/internal/events"
+	"github.com/danmurf/time-tracker/internal/tasks"
 	"github.com/google/uuid"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/assert"
@@ -12,50 +12,50 @@ import (
 )
 
 func TestSQLEventStore_StoreFetchAll(t *testing.T) {
-	event1 := events.Event{
+	event1 := tasks.Event{
 		ID:        uuid.New(),
-		Type:      events.EventTypeTaskStarted,
+		Type:      tasks.EventTypeTaskStarted,
 		CreatedAt: time.Now().Add(-10 * time.Minute).Truncate(time.Second).UTC(),
-		Payload:   events.EventPayload{TaskName: "my-task-1"},
+		Payload:   tasks.EventPayload{TaskName: "my-task-1"},
 	}
-	event2 := events.Event{
+	event2 := tasks.Event{
 		ID:        uuid.New(),
-		Type:      events.EventTypeTaskFinished,
+		Type:      tasks.EventTypeTaskFinished,
 		CreatedAt: time.Now().Add(-5 * time.Minute).Truncate(time.Second).UTC(),
-		Payload:   events.EventPayload{TaskName: "my-task-1"},
+		Payload:   tasks.EventPayload{TaskName: "my-task-1"},
 	}
-	event3 := events.Event{
+	event3 := tasks.Event{
 		ID:        uuid.New(),
-		Type:      events.EventTypeTaskStarted,
+		Type:      tasks.EventTypeTaskStarted,
 		CreatedAt: time.Now().Add(-2 * time.Minute).Truncate(time.Second).UTC(),
-		Payload:   events.EventPayload{TaskName: "my-task-2"},
+		Payload:   tasks.EventPayload{TaskName: "my-task-2"},
 	}
 	type args struct {
-		store []events.Event
+		store []tasks.Event
 	}
 	tests := []struct {
 		name string
 		args args
-		want []events.Event
+		want []tasks.Event
 	}{
 		{
 			name: "3 events",
 			args: args{
-				store: []events.Event{event1, event2, event3},
+				store: []tasks.Event{event1, event2, event3},
 			},
-			want: []events.Event{event1, event2, event3},
+			want: []tasks.Event{event1, event2, event3},
 		},
 		{
 			name: "1 event",
 			args: args{
-				store: []events.Event{event1},
+				store: []tasks.Event{event1},
 			},
-			want: []events.Event{event1},
+			want: []tasks.Event{event1},
 		},
 		{
 			name: "0 events",
 			args: args{
-				store: []events.Event{},
+				store: []tasks.Event{},
 			},
 			want: nil,
 		},
@@ -65,7 +65,7 @@ func TestSQLEventStore_StoreFetchAll(t *testing.T) {
 			ctx := context.Background()
 			db := newMemorySqliteDB(t)
 			defer db.Close()
-			sut, err := events.NewSQLEventStore(context.Background(), db)
+			sut, err := tasks.NewSQLEventStore(context.Background(), db)
 			assert.NoError(t, err)
 
 			for _, event := range tt.args.store {
