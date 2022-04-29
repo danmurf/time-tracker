@@ -29,12 +29,12 @@ import (
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "tt",
+	Use:   "time-tracker",
 	Short: "A simple CLI for tracking time spent on different tasks",
 	Long: `A simple CLI took for tracking time spent on different tasks, for example:
 
-tt start task1
-tt finish task1
+time-tracker start task1
+time-tracker finish task1
 
 The time spent in between start and finish for project1 will be recorded.`,
 }

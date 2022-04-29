@@ -9,10 +9,10 @@ go install github.com/danmurf/time-tracker@latest
 
 ## To start a task
 ```shell
-tt start my-task
+time-tracker start my-task
 ```
 
 ## To finish the task
 ```shell
-tt finish my-task
+time-tracker finish my-task
 ```

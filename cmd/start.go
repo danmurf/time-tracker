@@ -36,10 +36,10 @@ var startCmd = &cobra.Command{
 	Short: "Start working on a task",
 	Long: `Record that you have started working on a specific task, for example:
 
-tt start task1`,
+time-tracker start task1`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) != 1 {
-			cmd.PrintErrln("command usage is `tt start <task-name>`")
+			cmd.PrintErrln("command usage is `time-tracker start <task-name>`")
 			return
 		}
 

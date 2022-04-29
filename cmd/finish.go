@@ -33,7 +33,7 @@ var finishCmd = &cobra.Command{
 	Short: "finish working on a task",
 	Long: `Record that you have finished working on a specific task, for example:
 
-tt finish task1`,
+time-tracker finish task1`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("finish called")
 	},

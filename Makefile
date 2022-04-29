@@ -1,4 +1,4 @@
-default: bin/tt
+default: bin/time-tracker
 
-bin/tt:	$(wildcard *.go) $(wildcard */*.go)
-	go build -o=bin/tt main.go
+bin/time-tracker:	$(wildcard *.go) $(wildcard */*.go)
+	go build -o=bin/time-tracker main.go
