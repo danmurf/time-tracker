@@ -53,8 +53,8 @@ func (s SQLEventStore) Store(ctx context.Context, e Event) error {
 	if err != nil {
 		return fmt.Errorf("encoding payload: %w", err)
 	}
-	_, err = s.db.ExecContext(ctx, "INSERT INTO `event_store` VALUES(?, ?, ?, ?);", e.ID, e.Type, e.CreatedAt, payload)
-	if err != nil {
+
+	if _, err = s.db.ExecContext(ctx, "INSERT INTO `event_store` VALUES(?, ?, ?, ?);", e.ID, e.Type, e.CreatedAt, payload); err != nil {
 		return fmt.Errorf("inserting into db: %w", err)
 	}
 
@@ -68,11 +68,12 @@ func (s SQLEventStore) FetchAll(ctx context.Context) ([]Event, error) {
 		return events, fmt.Errorf("querying db: %w", err)
 	}
 	defer rows.Close()
+
 	if rows.Err() != nil {
-		return events, fmt.Errorf("reading result set: %w", err)
+		return events, fmt.Errorf("reading rows: %w", err)
 	}
 	for rows.Next() {
-		event := Event{}
+		var event Event
 		var payload []byte
 		if err = rows.Scan(&event.ID, &event.Type, &event.CreatedAt, &payload); err != nil {
 			return events, fmt.Errorf("scanning row: %w", err)
@@ -91,5 +92,6 @@ func (s SQLEventStore) bootstrap(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("creating event store: %w", err)
 	}
+
 	return nil
 }
