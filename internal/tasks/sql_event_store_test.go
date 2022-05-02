@@ -15,20 +15,20 @@ func TestSQLEventStore_StoreFetchAll(t *testing.T) {
 	event1 := tasks.Event{
 		ID:        uuid.New(),
 		Type:      tasks.EventTypeTaskStarted,
+		TaskName:  "my-task-1",
 		CreatedAt: time.Now().Add(-10 * time.Minute).Truncate(time.Second).UTC(),
-		Payload:   tasks.EventPayload{TaskName: "my-task-1"},
 	}
 	event2 := tasks.Event{
 		ID:        uuid.New(),
 		Type:      tasks.EventTypeTaskFinished,
+		TaskName:  "my-task-1",
 		CreatedAt: time.Now().Add(-5 * time.Minute).Truncate(time.Second).UTC(),
-		Payload:   tasks.EventPayload{TaskName: "my-task-1"},
 	}
 	event3 := tasks.Event{
 		ID:        uuid.New(),
 		Type:      tasks.EventTypeTaskStarted,
+		TaskName:  "my-task-2",
 		CreatedAt: time.Now().Add(-2 * time.Minute).Truncate(time.Second).UTC(),
-		Payload:   tasks.EventPayload{TaskName: "my-task-2"},
 	}
 	type args struct {
 		store []tasks.Event
