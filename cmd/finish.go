@@ -22,7 +22,10 @@ THE SOFTWARE.
 package cmd
 
 import (
+	"database/sql"
 	"fmt"
+	"github.com/danmurf/time-tracker/internal/tasks"
+	"os"
 
 	"github.com/spf13/cobra"
 )
@@ -35,7 +38,44 @@ var finishCmd = &cobra.Command{
 
 time-tracker finish task1`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("finish called")
+		if len(args) != 1 {
+			cmd.PrintErrln("command usage is `time-tracker start <task-name>`")
+			return
+		}
+
+		homeDir, err := os.UserHomeDir()
+		if err != nil {
+			cmd.PrintErrln(fmt.Errorf("finding user home directory: %w", err))
+			return
+		}
+
+		dbPath := fmt.Sprintf("%s/%s", homeDir, ".time-tracker")
+		if err = os.MkdirAll(dbPath, os.ModePerm); err != nil {
+			cmd.PrintErrln(fmt.Errorf("creating time tracker directory [%s]: %w", dbPath, err))
+			return
+		}
+
+		dbFilePath := fmt.Sprintf("%s/%s", dbPath, "time-tracker.db")
+		db, err := sql.Open("sqlite3", dbFilePath)
+		if err != nil {
+			cmd.PrintErrln(fmt.Errorf("creating database: %w", err))
+			return
+		}
+
+		eventStore, err := tasks.NewSQLEventStore(cmd.Context(), db)
+		if err != nil {
+			cmd.PrintErrln(fmt.Errorf("creating event store: %w", err))
+			return
+		}
+
+		finisher := tasks.NewFinisher(eventStore)
+		taskName := args[0]
+		if err = finisher.Finish(cmd.Context(), taskName); err != nil {
+			cmd.PrintErrln(fmt.Errorf("creating task starter: %w", err))
+			return
+		}
+
+		cmd.Printf("⏱  %s started. Run `tt finish %s` when you have finished work.\n", taskName, taskName)
 	},
 }
 

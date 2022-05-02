@@ -7,10 +7,6 @@ import (
 	"time"
 )
 
-type EventStore interface {
-	Store(ctx context.Context, event Event) error
-}
-
 type Starter struct {
 	eventStore EventStore
 	now        func() time.Time

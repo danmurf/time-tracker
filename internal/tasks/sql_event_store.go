@@ -31,6 +31,10 @@ type Event struct {
 	CreatedAt time.Time
 }
 
+type EventStore interface {
+	Store(ctx context.Context, event Event) error
+}
+
 func NewSQLEventStore(ctx context.Context, db *sql.DB) (SQLEventStore, error) {
 	s := SQLEventStore{db: db}
 	if err := s.bootstrap(ctx); err != nil {
