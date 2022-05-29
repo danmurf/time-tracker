@@ -3,23 +3,24 @@ package tasks
 import (
 	"context"
 	"fmt"
+	"github.com/danmurf/time-tracker/internal/app"
 	"github.com/google/uuid"
 	"time"
 )
 
 type Finisher struct {
-	eventStore EventStore
+	eventStore app.EventStore
 	now        func() time.Time
 }
 
-func NewFinisher(eventStore EventStore) Finisher {
+func NewFinisher(eventStore app.EventStore) Finisher {
 	return Finisher{eventStore: eventStore, now: time.Now}
 }
 
 func (f Finisher) Finish(ctx context.Context, taskName string) error {
-	event := Event{
+	event := app.Event{
 		ID:        uuid.New(),
-		Type:      EventTypeTaskFinished,
+		Type:      app.EventTypeTaskFinished,
 		TaskName:  taskName,
 		CreatedAt: f.now(),
 	}

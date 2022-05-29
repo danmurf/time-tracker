@@ -1,11 +1,10 @@
-package tasks
+package eventstore
 
 import (
 	"context"
 	"database/sql"
 	"fmt"
-	"github.com/google/uuid"
-	"time"
+	"github.com/danmurf/time-tracker/internal/app"
 )
 
 const (
@@ -18,22 +17,7 @@ CREATE TABLE IF NOT EXISTS "event_store" (
 	PRIMARY KEY (id)
 );
 `
-	EventTypeTaskStarted  = "task-started"
-	EventTypeTaskFinished = "task-finished"
 )
-
-type EventType string
-
-type Event struct {
-	ID        uuid.UUID
-	Type      EventType
-	TaskName  string
-	CreatedAt time.Time
-}
-
-type EventStore interface {
-	Store(ctx context.Context, event Event) error
-}
 
 func NewSQLEventStore(ctx context.Context, db *sql.DB) (SQLEventStore, error) {
 	s := SQLEventStore{db: db}
@@ -47,7 +31,7 @@ type SQLEventStore struct {
 	db *sql.DB
 }
 
-func (s SQLEventStore) Store(ctx context.Context, e Event) error {
+func (s SQLEventStore) Store(ctx context.Context, e app.Event) error {
 	if _, err := s.db.ExecContext(ctx, "INSERT INTO `event_store` VALUES(?, ?, ?, ?);", e.ID, e.Type, e.TaskName, e.CreatedAt); err != nil {
 		return fmt.Errorf("inserting into db: %w", err)
 	}
@@ -55,8 +39,8 @@ func (s SQLEventStore) Store(ctx context.Context, e Event) error {
 	return nil
 }
 
-func (s SQLEventStore) FetchAll(ctx context.Context) ([]Event, error) {
-	var events []Event
+func (s SQLEventStore) FetchAll(ctx context.Context) ([]app.Event, error) {
+	var events []app.Event
 	rows, err := s.db.QueryContext(ctx, "SELECT id, type, task_name, created_at FROM `event_store` ORDER BY created_at DESC;")
 	if err != nil {
 		return events, fmt.Errorf("querying db: %w", err)
@@ -67,7 +51,7 @@ func (s SQLEventStore) FetchAll(ctx context.Context) ([]Event, error) {
 		return events, fmt.Errorf("reading rows: %w", err)
 	}
 	for rows.Next() {
-		var event Event
+		var event app.Event
 		if err = rows.Scan(&event.ID, &event.Type, &event.TaskName, &event.CreatedAt); err != nil {
 			return events, fmt.Errorf("scanning row: %w", err)
 		}

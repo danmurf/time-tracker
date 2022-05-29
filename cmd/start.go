@@ -24,6 +24,7 @@ package cmd
 import (
 	"database/sql"
 	"fmt"
+	"github.com/danmurf/time-tracker/internal/pkg/eventstore"
 	"github.com/danmurf/time-tracker/internal/tasks"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/spf13/cobra"
@@ -62,7 +63,7 @@ time-tracker start task1`,
 			return
 		}
 
-		eventStore, err := tasks.NewSQLEventStore(cmd.Context(), db)
+		eventStore, err := eventstore.NewSQLEventStore(cmd.Context(), db)
 		if err != nil {
 			cmd.PrintErrln(fmt.Errorf("creating event store: %w", err))
 			return

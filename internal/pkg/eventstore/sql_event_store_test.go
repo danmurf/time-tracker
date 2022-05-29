@@ -1,9 +1,10 @@
-package tasks_test
+package eventstore_test
 
 import (
 	"context"
 	"database/sql"
-	"github.com/danmurf/time-tracker/internal/tasks"
+	"github.com/danmurf/time-tracker/internal/app"
+	"github.com/danmurf/time-tracker/internal/pkg/eventstore"
 	"github.com/google/uuid"
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/stretchr/testify/assert"
@@ -12,50 +13,50 @@ import (
 )
 
 func TestSQLEventStore_StoreFetchAll(t *testing.T) {
-	event1 := tasks.Event{
+	event1 := app.Event{
 		ID:        uuid.New(),
-		Type:      tasks.EventTypeTaskStarted,
+		Type:      app.EventTypeTaskStarted,
 		TaskName:  "my-task-1",
 		CreatedAt: time.Now().Add(-10 * time.Minute).Truncate(time.Second).UTC(),
 	}
-	event2 := tasks.Event{
+	event2 := app.Event{
 		ID:        uuid.New(),
-		Type:      tasks.EventTypeTaskFinished,
+		Type:      app.EventTypeTaskFinished,
 		TaskName:  "my-task-1",
 		CreatedAt: time.Now().Add(-5 * time.Minute).Truncate(time.Second).UTC(),
 	}
-	event3 := tasks.Event{
+	event3 := app.Event{
 		ID:        uuid.New(),
-		Type:      tasks.EventTypeTaskStarted,
+		Type:      app.EventTypeTaskStarted,
 		TaskName:  "my-task-2",
 		CreatedAt: time.Now().Add(-2 * time.Minute).Truncate(time.Second).UTC(),
 	}
 	type args struct {
-		store []tasks.Event
+		store []app.Event
 	}
 	tests := []struct {
 		name string
 		args args
-		want []tasks.Event
+		want []app.Event
 	}{
 		{
 			name: "3 events",
 			args: args{
-				store: []tasks.Event{event1, event2, event3},
+				store: []app.Event{event1, event2, event3},
 			},
-			want: []tasks.Event{event1, event2, event3},
+			want: []app.Event{event1, event2, event3},
 		},
 		{
 			name: "1 event",
 			args: args{
-				store: []tasks.Event{event1},
+				store: []app.Event{event1},
 			},
-			want: []tasks.Event{event1},
+			want: []app.Event{event1},
 		},
 		{
 			name: "0 events",
 			args: args{
-				store: []tasks.Event{},
+				store: []app.Event{},
 			},
 			want: nil,
 		},
@@ -65,7 +66,7 @@ func TestSQLEventStore_StoreFetchAll(t *testing.T) {
 			ctx := context.Background()
 			db := newMemorySqliteDB(t)
 			defer db.Close()
-			sut, err := tasks.NewSQLEventStore(context.Background(), db)
+			sut, err := eventstore.NewSQLEventStore(context.Background(), db)
 			assert.NoError(t, err)
 
 			for _, event := range tt.args.store {
