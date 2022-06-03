@@ -1,3 +1,5 @@
+![master](https://github.com/danmurf/time-tracker/actions/workflows/go.yml/badge.svg?branch=master)
+
 # Time Tracker
 
 Track task duration easily from the command line.
