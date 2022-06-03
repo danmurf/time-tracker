@@ -3,6 +3,7 @@ package tasks
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/danmurf/time-tracker/internal/app"
 	app_mocks "github.com/danmurf/time-tracker/internal/app/mocks"
 	"github.com/google/uuid"
@@ -104,6 +105,25 @@ func TestStarter_Start(t *testing.T) {
 			wantErr: assert.NoError,
 		},
 		{
+			name: "unknown error finding latest event",
+			fields: fields{
+				eventFinder: func() *app_mocks.EventFinder {
+					m := &app_mocks.EventFinder{}
+					m.
+						On("LatestByName", mock.Anything, "test").
+						Once().
+						Return(app.Event{}, errors.New("something went wrong"))
+					return m
+				}(),
+				eventStore: &app_mocks.EventStore{},
+			},
+			args: args{
+				ctx:      context.Background(),
+				taskName: "test",
+			},
+			wantErr: assert.Error,
+		},
+		{
 			name: "error storing event",
 			fields: fields{
 				eventFinder: func() *app_mocks.EventFinder {
@@ -151,7 +171,12 @@ func TestStarter_Start(t *testing.T) {
 				ctx:      context.Background(),
 				taskName: "test",
 			},
-			wantErr: assert.Error,
+			wantErr: func(t assert.TestingT, err error, i ...interface{}) bool {
+				return assert.True(t,
+					errors.Is(err, app.ErrTaskAlreadyStarted),
+					fmt.Sprintf("want err [%s]; got [%s]", app.ErrTaskAlreadyStarted, err),
+				)
+			},
 		},
 	}
 	for _, tt := range tests {
