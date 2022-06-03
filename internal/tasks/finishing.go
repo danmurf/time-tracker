@@ -33,14 +33,14 @@ func (f Finisher) Finish(ctx context.Context, taskName string) error {
 		return fmt.Errorf("task never started: %w", app.ErrTaskNotStarted)
 	}
 
-	event := app.Event{
+	if err := f.eventStore.Store(ctx, app.Event{
 		ID:        f.newUUID(),
 		Type:      app.EventTypeTaskFinished,
 		TaskName:  taskName,
 		CreatedAt: f.now(),
-	}
-	if err := f.eventStore.Store(ctx, event); err != nil {
+	}); err != nil {
 		return fmt.Errorf("storing event: %w", err)
 	}
+
 	return nil
 }

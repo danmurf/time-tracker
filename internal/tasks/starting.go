@@ -39,5 +39,6 @@ func (s Starter) Start(ctx context.Context, taskName string) error {
 	}); err != nil {
 		return fmt.Errorf("storing event: %w", err)
 	}
+
 	return nil
 }
