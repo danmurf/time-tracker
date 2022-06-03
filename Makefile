@@ -4,3 +4,12 @@ rwildcard=$(foreach d,$(wildcard $(1:=/*)),$(call rwildcard,$d,$2) $(filter $(su
 
 bin/time-tracker: $(call rwildcard,.,*.go)
 	go build -o=bin/time-tracker main.go
+
+fmt:
+	go fmt ./...
+
+test: lint
+	go test ./...
+
+lint:
+	golangci-lint run

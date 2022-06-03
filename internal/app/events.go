@@ -20,6 +20,7 @@ type Event struct {
 	CreatedAt time.Time
 }
 
+//go:generate mockery --name=EventStore
 type EventStore interface {
 	Store(ctx context.Context, event Event) error
 }

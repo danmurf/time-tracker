@@ -76,7 +76,7 @@ time-tracker finish task1`,
 			return
 		}
 
-		cmd.Printf("⏱  %s finished.\n", taskName, taskName)
+		cmd.Printf("⏱  %s finished.\n", taskName)
 	},
 }
 
