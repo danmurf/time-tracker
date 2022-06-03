@@ -11,6 +11,7 @@ import (
 type Finisher struct {
 	eventStore app.EventStore
 	now        func() time.Time
+	newUUID    func() uuid.UUID
 }
 
 func NewFinisher(eventStore app.EventStore) Finisher {
@@ -19,7 +20,7 @@ func NewFinisher(eventStore app.EventStore) Finisher {
 
 func (f Finisher) Finish(ctx context.Context, taskName string) error {
 	event := app.Event{
-		ID:        uuid.New(),
+		ID:        f.newUUID(),
 		Type:      app.EventTypeTaskFinished,
 		TaskName:  taskName,
 		CreatedAt: f.now(),
