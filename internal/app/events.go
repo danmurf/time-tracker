@@ -24,3 +24,8 @@ type Event struct {
 type EventStore interface {
 	Store(ctx context.Context, event Event) error
 }
+
+//go:generate mockery --name=EventFinder
+type EventFinder interface {
+	LatestByName(ctx context.Context, taskName string) (Event, error)
+}

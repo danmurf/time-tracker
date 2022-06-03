@@ -7,6 +7,11 @@ import (
 	"github.com/danmurf/time-tracker/internal/app"
 )
 
+var (
+	_ app.EventStore  = (*SQLEventStore)(nil)
+	_ app.EventFinder = (*SQLEventStore)(nil)
+)
+
 const (
 	eventStoreCreation = `
 CREATE TABLE IF NOT EXISTS "event_store" (
@@ -68,4 +73,9 @@ func (s SQLEventStore) bootstrap(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+func (s SQLEventStore) LatestByName(ctx context.Context, taskName string) (app.Event, error) {
+	//TODO implement me
+	panic("implement me")
 }

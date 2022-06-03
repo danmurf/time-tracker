@@ -63,13 +63,13 @@ time-tracker start task1`,
 			return
 		}
 
-		eventStore, err := eventstore.NewSQLEventStore(cmd.Context(), db)
+		eventStorage, err := eventstore.NewSQLEventStore(cmd.Context(), db)
 		if err != nil {
 			cmd.PrintErrln(fmt.Errorf("creating event store: %w", err))
 			return
 		}
 
-		starter := tasks.NewStarter(eventStore)
+		starter := tasks.NewStarter(eventStorage, eventStorage)
 		taskName := args[0]
 		if err = starter.Start(cmd.Context(), taskName); err != nil {
 			cmd.PrintErrln(fmt.Errorf("creating task starter: %w", err))

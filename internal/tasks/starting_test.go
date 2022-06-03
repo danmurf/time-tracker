@@ -23,7 +23,8 @@ func TestStarter_Start(t *testing.T) {
 	}
 
 	type fields struct {
-		eventStore *app_mocks.EventStore
+		eventStore  *app_mocks.EventStore
+		eventFinder *app_mocks.EventFinder
 	}
 	type args struct {
 		ctx      context.Context
@@ -36,8 +37,52 @@ func TestStarter_Start(t *testing.T) {
 		wantErr assert.ErrorAssertionFunc
 	}{
 		{
-			name: "successfully starts task",
+			name: "successfully starts task which has never been started before",
 			fields: fields{
+				eventFinder: func() *app_mocks.EventFinder {
+					m := &app_mocks.EventFinder{}
+					m.
+						On("LatestByName", mock.Anything, "test").
+						Once().
+						Return(app.Event{}, app.ErrEventNotFound)
+					return m
+				}(),
+				eventStore: func() *app_mocks.EventStore {
+					m := &app_mocks.EventStore{}
+					m.
+						On("Store", mock.Anything, app.Event{
+							ID:        id,
+							Type:      app.EventTypeTaskStarted,
+							TaskName:  "test",
+							CreatedAt: now,
+						}).
+						Once().
+						Return(nil)
+					return m
+				}(),
+			},
+			args: args{
+				ctx:      context.Background(),
+				taskName: "test",
+			},
+			wantErr: assert.NoError,
+		},
+		{
+			name: "successfully starts task which was previously finished",
+			fields: fields{
+				eventFinder: func() *app_mocks.EventFinder {
+					m := &app_mocks.EventFinder{}
+					m.
+						On("LatestByName", mock.Anything, "test").
+						Once().
+						Return(app.Event{
+							ID:        uuid.New(),
+							Type:      app.EventTypeTaskFinished,
+							TaskName:  "test",
+							CreatedAt: now.Add(-1 * time.Minute),
+						}, nil)
+					return m
+				}(),
 				eventStore: func() *app_mocks.EventStore {
 					m := &app_mocks.EventStore{}
 					m.
@@ -61,6 +106,14 @@ func TestStarter_Start(t *testing.T) {
 		{
 			name: "error storing event",
 			fields: fields{
+				eventFinder: func() *app_mocks.EventFinder {
+					m := &app_mocks.EventFinder{}
+					m.
+						On("LatestByName", mock.Anything, "test").
+						Once().
+						Return(app.Event{}, app.ErrEventNotFound)
+					return m
+				}(),
 				eventStore: func() *app_mocks.EventStore {
 					m := &app_mocks.EventStore{}
 					m.
@@ -76,16 +129,42 @@ func TestStarter_Start(t *testing.T) {
 			},
 			wantErr: assert.Error,
 		},
+		{
+			name: "it stops you starting a task which is already started",
+			fields: fields{
+				eventStore: &app_mocks.EventStore{},
+				eventFinder: func() *app_mocks.EventFinder {
+					m := &app_mocks.EventFinder{}
+					m.
+						On("LatestByName", mock.Anything, "test").
+						Once().
+						Return(app.Event{
+							ID:        uuid.UUID{},
+							Type:      app.EventTypeTaskStarted,
+							TaskName:  "test",
+							CreatedAt: now.Add(-1 * time.Minute),
+						}, nil)
+					return m
+				}(),
+			},
+			args: args{
+				ctx:      context.Background(),
+				taskName: "test",
+			},
+			wantErr: assert.Error,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			sut := Starter{
-				eventStore: tt.fields.eventStore,
-				now:        nowFunc,
-				newUUID:    uuidFunc,
+				eventStore:  tt.fields.eventStore,
+				eventFinder: tt.fields.eventFinder,
+				now:         nowFunc,
+				newUUID:     uuidFunc,
 			}
 			tt.wantErr(t, sut.Start(tt.args.ctx, tt.args.taskName))
 			tt.fields.eventStore.AssertExpectations(t)
+			tt.fields.eventFinder.AssertExpectations(t)
 		})
 	}
 }
