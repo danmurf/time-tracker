@@ -23,7 +23,9 @@ package cmd
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
+	"github.com/danmurf/time-tracker/internal/app"
 	"github.com/danmurf/time-tracker/internal/pkg/eventstore"
 	"github.com/danmurf/time-tracker/internal/tasks"
 	"os"
@@ -71,9 +73,14 @@ time-tracker finish task1`,
 
 		finisher := tasks.NewFinisher(eventStorage, eventStorage)
 		taskName := args[0]
-		if err = finisher.Finish(cmd.Context(), taskName); err != nil {
-			cmd.PrintErrln(fmt.Errorf("creating task finisher: %w", err))
-			return
+		err = finisher.Finish(cmd.Context(), taskName)
+		switch {
+		case !errors.Is(err, app.ErrTaskNotStarted) && err != nil:
+			cmd.PrintErrln(fmt.Errorf("💥 finishing task: %w", err))
+			os.Exit(1)
+		case errors.Is(err, app.ErrTaskNotStarted):
+			cmd.PrintErrln(fmt.Sprintf("👀 %s not in progress", taskName))
+			os.Exit(1)
 		}
 
 		cmd.Printf("⏱  %s finished.\n", taskName)
