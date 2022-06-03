@@ -9,4 +9,5 @@ func (e Error) Error() string {
 const (
 	ErrEventNotFound      = Error("event not found")
 	ErrTaskAlreadyStarted = Error("task already started")
+	ErrTaskNotStarted     = Error("task not started")
 )

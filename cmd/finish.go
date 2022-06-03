@@ -63,13 +63,13 @@ time-tracker finish task1`,
 			return
 		}
 
-		eventStore, err := eventstore.NewSQLEventStore(cmd.Context(), db)
+		eventStorage, err := eventstore.NewSQLEventStore(cmd.Context(), db)
 		if err != nil {
 			cmd.PrintErrln(fmt.Errorf("creating event store: %w", err))
 			return
 		}
 
-		finisher := tasks.NewFinisher(eventStore)
+		finisher := tasks.NewFinisher(eventStorage, eventStorage)
 		taskName := args[0]
 		if err = finisher.Finish(cmd.Context(), taskName); err != nil {
 			cmd.PrintErrln(fmt.Errorf("creating task finisher: %w", err))
