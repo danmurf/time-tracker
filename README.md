@@ -1,4 +1,5 @@
-![master](https://github.com/danmurf/time-tracker/actions/workflows/go.yml/badge.svg?branch=master)
+[![go](https://github.com/danmurf/time-tracker/actions/workflows/go.yml/badge.svg?branch=master)](https://github.com/danmurf/time-tracker/actions/workflows/go.yml)
+[![codeql-analysis](https://github.com/danmurf/time-tracker/actions/workflows/codeql-analysis.yml/badge.svg?branch=master)](https://github.com/danmurf/time-tracker/actions/workflows/codeql-analysis.yml)
 
 # Time Tracker
 
