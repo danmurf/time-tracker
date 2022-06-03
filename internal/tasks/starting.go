@@ -26,7 +26,7 @@ func (s Starter) Start(ctx context.Context, taskName string) error {
 	case err != nil && !errors.Is(err, app.ErrEventNotFound):
 		return fmt.Errorf("finding latest event: %w", err)
 	case !errors.Is(err, app.ErrEventNotFound) && latest.Type == app.EventTypeTaskStarted:
-		return fmt.Errorf("starting task: %w", app.ErrTaskAlreadyStarted)
+		return fmt.Errorf("task started event found: %w", app.ErrTaskAlreadyStarted)
 	}
 
 	if err := s.eventStore.Store(ctx, app.Event{

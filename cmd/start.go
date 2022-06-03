@@ -23,7 +23,9 @@ package cmd
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
+	"github.com/danmurf/time-tracker/internal/app"
 	"github.com/danmurf/time-tracker/internal/pkg/eventstore"
 	"github.com/danmurf/time-tracker/internal/tasks"
 	_ "github.com/mattn/go-sqlite3"
@@ -41,39 +43,44 @@ time-tracker start task1`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) != 1 {
 			cmd.PrintErrln("command usage is `time-tracker start <task-name>`")
-			return
+			os.Exit(1)
 		}
 
 		homeDir, err := os.UserHomeDir()
 		if err != nil {
 			cmd.PrintErrln(fmt.Errorf("finding user home directory: %w", err))
-			return
+			os.Exit(1)
 		}
 
 		dbPath := fmt.Sprintf("%s/%s", homeDir, ".time-tracker")
 		if err = os.MkdirAll(dbPath, os.ModePerm); err != nil {
 			cmd.PrintErrln(fmt.Errorf("creating time tracker directory [%s]: %w", dbPath, err))
-			return
+			os.Exit(1)
 		}
 
 		dbFilePath := fmt.Sprintf("%s/%s", dbPath, "time-tracker.db")
 		db, err := sql.Open("sqlite3", dbFilePath)
 		if err != nil {
 			cmd.PrintErrln(fmt.Errorf("creating database: %w", err))
-			return
+			os.Exit(1)
 		}
 
 		eventStorage, err := eventstore.NewSQLEventStore(cmd.Context(), db)
 		if err != nil {
 			cmd.PrintErrln(fmt.Errorf("creating event store: %w", err))
-			return
+			os.Exit(1)
 		}
 
 		starter := tasks.NewStarter(eventStorage, eventStorage)
 		taskName := args[0]
-		if err = starter.Start(cmd.Context(), taskName); err != nil {
-			cmd.PrintErrln(fmt.Errorf("creating task starter: %w", err))
-			return
+		err = starter.Start(cmd.Context(), taskName)
+		switch {
+		case !errors.Is(err, app.ErrTaskAlreadyStarted) && err != nil:
+			cmd.PrintErrln(fmt.Errorf("💥 starting task: %w", err))
+			os.Exit(1)
+		case errors.Is(err, app.ErrTaskAlreadyStarted):
+			cmd.PrintErrln(fmt.Sprintf("👀 %s already in progress", taskName))
+			os.Exit(1)
 		}
 
 		cmd.Printf("⏱  %s started. Run `time-tracker finish %s` when you have finished work.\n", taskName, taskName)
