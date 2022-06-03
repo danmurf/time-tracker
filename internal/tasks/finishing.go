@@ -15,7 +15,7 @@ type Finisher struct {
 }
 
 func NewFinisher(eventStore app.EventStore) Finisher {
-	return Finisher{eventStore: eventStore, now: time.Now}
+	return Finisher{eventStore: eventStore, now: time.Now, newUUID: uuid.New}
 }
 
 func (f Finisher) Finish(ctx context.Context, taskName string) error {

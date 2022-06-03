@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-func TestFinisher_Finish(t *testing.T) {
+func TestStarter_Start(t *testing.T) {
 	now := time.Now()
 	nowFunc := func() time.Time {
 		return now
@@ -36,14 +36,14 @@ func TestFinisher_Finish(t *testing.T) {
 		wantErr assert.ErrorAssertionFunc
 	}{
 		{
-			name: "successfully finishes task",
+			name: "successfully starts task",
 			fields: fields{
 				eventStore: func() *app_mocks.EventStore {
 					m := &app_mocks.EventStore{}
 					m.
 						On("Store", mock.Anything, app.Event{
 							ID:        id,
-							Type:      app.EventTypeTaskFinished,
+							Type:      app.EventTypeTaskStarted,
 							TaskName:  "test",
 							CreatedAt: now,
 						}).
@@ -79,12 +79,12 @@ func TestFinisher_Finish(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			sut := Finisher{
+			sut := Starter{
 				eventStore: tt.fields.eventStore,
 				now:        nowFunc,
 				newUUID:    uuidFunc,
 			}
-			tt.wantErr(t, sut.Finish(tt.args.ctx, tt.args.taskName))
+			tt.wantErr(t, sut.Start(tt.args.ctx, tt.args.taskName))
 			tt.fields.eventStore.AssertExpectations(t)
 		})
 	}

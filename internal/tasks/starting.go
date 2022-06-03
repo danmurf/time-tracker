@@ -11,15 +11,16 @@ import (
 type Starter struct {
 	eventStore app.EventStore
 	now        func() time.Time
+	newUUID    func() uuid.UUID
 }
 
 func NewStarter(eventStore app.EventStore) Starter {
-	return Starter{eventStore: eventStore, now: time.Now}
+	return Starter{eventStore: eventStore, now: time.Now, newUUID: uuid.New}
 }
 
 func (s Starter) Start(ctx context.Context, taskName string) error {
 	event := app.Event{
-		ID:        uuid.New(),
+		ID:        s.newUUID(),
 		Type:      app.EventTypeTaskStarted,
 		TaskName:  taskName,
 		CreatedAt: s.now(),
