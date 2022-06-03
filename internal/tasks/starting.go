@@ -22,21 +22,19 @@ func NewStarter(eventStore app.EventStore, eventFinder app.EventFinder) Starter 
 
 func (s Starter) Start(ctx context.Context, taskName string) error {
 	latest, err := s.eventFinder.LatestByName(ctx, taskName)
-	if err != nil && !errors.Is(err, app.ErrEventNotFound) {
+	switch {
+	case err != nil && !errors.Is(err, app.ErrEventNotFound):
 		return fmt.Errorf("finding latest event: %w", err)
-	}
-
-	if !errors.Is(err, app.ErrEventNotFound) && latest.Type == app.EventTypeTaskStarted {
+	case !errors.Is(err, app.ErrEventNotFound) && latest.Type == app.EventTypeTaskStarted:
 		return fmt.Errorf("starting task: %w", app.ErrTaskAlreadyStarted)
 	}
 
-	event := app.Event{
+	if err := s.eventStore.Store(ctx, app.Event{
 		ID:        s.newUUID(),
 		Type:      app.EventTypeTaskStarted,
 		TaskName:  taskName,
 		CreatedAt: s.now(),
-	}
-	if err := s.eventStore.Store(ctx, event); err != nil {
+	}); err != nil {
 		return fmt.Errorf("storing event: %w", err)
 	}
 	return nil
