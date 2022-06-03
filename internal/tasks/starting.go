@@ -9,6 +9,8 @@ import (
 	"time"
 )
 
+var _ app.TaskStarter = (*Starter)(nil)
+
 type Starter struct {
 	eventStore  app.EventStore
 	eventFinder app.EventFinder

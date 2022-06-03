@@ -9,6 +9,8 @@ import (
 	"time"
 )
 
+var _ app.TaskFinisher = (*Finisher)(nil)
+
 type Finisher struct {
 	eventStore  app.EventStore
 	eventFinder app.EventFinder

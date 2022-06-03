@@ -9,6 +9,8 @@ import (
 const (
 	EventTypeTaskStarted  = EventType("task-started")
 	EventTypeTaskFinished = EventType("task-finished")
+
+	ErrEventNotFound = Error("event not found")
 )
 
 type EventType string
