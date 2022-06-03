@@ -72,11 +72,11 @@ time-tracker finish task1`,
 		finisher := tasks.NewFinisher(eventStore)
 		taskName := args[0]
 		if err = finisher.Finish(cmd.Context(), taskName); err != nil {
-			cmd.PrintErrln(fmt.Errorf("creating task starter: %w", err))
+			cmd.PrintErrln(fmt.Errorf("creating task finisher: %w", err))
 			return
 		}
 
-		cmd.Printf("⏱  %s started. Run `tt finish %s` when you have finished work.\n", taskName, taskName)
+		cmd.Printf("⏱  %s finished.\n", taskName, taskName)
 	},
 }
 

@@ -76,7 +76,7 @@ time-tracker start task1`,
 			return
 		}
 
-		cmd.Printf("⏱  %s started. Run `tt finish %s` when you have finished work.\n", taskName, taskName)
+		cmd.Printf("⏱  %s started. Run `time-tracker finish %s` when you have finished work.\n", taskName, taskName)
 	},
 }
 
