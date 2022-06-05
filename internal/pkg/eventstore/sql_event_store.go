@@ -70,32 +70,16 @@ func (s SQLEventStore) FetchAll(ctx context.Context) ([]app.Event, error) {
 
 func (s SQLEventStore) LatestByName(ctx context.Context, taskName string) (event app.Event, err error) {
 	query := `SELECT e.id, e.type, e.task_name, e.created_at FROM event_store e WHERE e.task_name = ? ORDER BY e.created_at DESC LIMIT 1;`
-	row := s.db.QueryRowContext(ctx, query, taskName)
-	if row.Err() != nil {
-		return event, fmt.Errorf("querying db: %w", row.Err())
-	}
-
-	var id string
-	err = row.Scan(&id, &event.Type, &event.TaskName, &event.CreatedAt)
-	switch {
-	case !errors.Is(err, sql.ErrNoRows) && err != nil:
-		return event, fmt.Errorf("scanning row: %w", err)
-	case errors.Is(err, sql.ErrNoRows):
-		return event, fmt.Errorf("finding latest event: %w", app.ErrEventNotFound)
-	}
-
-	taskID, err := uuid.Parse(id)
-	if err != nil {
-		return event, fmt.Errorf("parsing task ID: %w", err)
-	}
-	event.ID = taskID
-
-	return event, nil
+	return s.findOneQuery(ctx, query, taskName)
 }
 
 func (s SQLEventStore) LatestByNameType(ctx context.Context, taskName string, eventType app.EventType) (event app.Event, err error) {
 	query := `SELECT e.id, e.type, e.task_name, e.created_at FROM event_store e WHERE e.task_name = ? AND e.type = ? ORDER BY e.created_at DESC LIMIT 1;`
-	row := s.db.QueryRowContext(ctx, query, taskName, eventType)
+	return s.findOneQuery(ctx, query, taskName, eventType)
+}
+
+func (s SQLEventStore) findOneQuery(ctx context.Context, query string, args ...any) (event app.Event, err error) {
+	row := s.db.QueryRowContext(ctx, query, args...)
 	if row.Err() != nil {
 		return event, fmt.Errorf("querying db: %w", row.Err())
 	}
