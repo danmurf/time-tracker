@@ -34,4 +34,5 @@ type EventStore interface {
 // event with the given name.
 type EventFinder interface {
 	LatestByName(ctx context.Context, taskName string) (Event, error)
+	LatestByNameType(ctx context.Context, taskName string, eventType EventType) (Event, error)
 }
