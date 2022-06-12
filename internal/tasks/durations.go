@@ -35,8 +35,8 @@ func (d Durations) FetchLastCompleted(ctx context.Context, taskName string) (ct 
 
 	return app.CompletedTask{
 		Name:     taskName,
-		Started:  started.CreatedAt,
-		Finished: finished.CreatedAt,
+		Started:  started,
+		Finished: finished,
 		Duration: finished.CreatedAt.Sub(started.CreatedAt),
 	}, nil
 }

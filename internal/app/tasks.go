@@ -12,11 +12,11 @@ const (
 )
 
 // CompletedTask represents a task which has been both started and finished. The CompletedTask.Duration field
-// represents the duration difference between CompletedTask.Started and CompletedTask.Finished.
+// represents the duration difference between CompletedTask.Started.CreatedAt and CompletedTask.Finished.CreatedAt.
 type CompletedTask struct {
 	Name     string
-	Started  time.Time
-	Finished time.Time
+	Started  Event
+	Finished Event
 	Duration time.Duration
 }
 

@@ -14,6 +14,8 @@ import (
 
 func TestDurations_FetchLastCompleted(t *testing.T) {
 	now := time.Now()
+	startedID := uuid.New()
+	finishedID := uuid.New()
 	type fields struct {
 		eventFinder *app_mocks.EventFinder
 	}
@@ -38,11 +40,13 @@ func TestDurations_FetchLastCompleted(t *testing.T) {
 						Twice().
 						Return(func(_ context.Context, taskName string, eventType app.EventType) app.Event {
 							createdAt := now.Add(-2 * time.Minute)
+							id := startedID
 							if eventType == app.EventTypeTaskFinished {
 								createdAt = now.Add(-1 * time.Minute)
+								id = finishedID
 							}
 							return app.Event{
-								ID:        uuid.New(),
+								ID:        id,
 								Type:      eventType,
 								TaskName:  taskName,
 								CreatedAt: createdAt,
@@ -57,8 +61,8 @@ func TestDurations_FetchLastCompleted(t *testing.T) {
 			},
 			want: app.CompletedTask{
 				Name:     "test-task",
-				Started:  now.Add(-2 * time.Minute),
-				Finished: now.Add(-1 * time.Minute),
+				Started:  app.Event{ID: startedID, Type: app.EventTypeTaskStarted, TaskName: "test-task", CreatedAt: now.Add(-2 * time.Minute)},
+				Finished: app.Event{ID: finishedID, Type: app.EventTypeTaskFinished, TaskName: "test-task", CreatedAt: now.Add(-1 * time.Minute)},
 				Duration: 1 * time.Minute,
 			},
 			wantErr: assert.NoError,
@@ -73,11 +77,13 @@ func TestDurations_FetchLastCompleted(t *testing.T) {
 						Twice().
 						Return(func(_ context.Context, taskName string, eventType app.EventType) app.Event {
 							createdAt := now.Add(-5 * time.Second)
+							id := startedID
 							if eventType == app.EventTypeTaskFinished {
 								createdAt = now.Add(-3 * time.Second)
+								id = finishedID
 							}
 							return app.Event{
-								ID:        uuid.New(),
+								ID:        id,
 								Type:      eventType,
 								TaskName:  taskName,
 								CreatedAt: createdAt,
@@ -92,8 +98,8 @@ func TestDurations_FetchLastCompleted(t *testing.T) {
 			},
 			want: app.CompletedTask{
 				Name:     "test-task",
-				Started:  now.Add(-5 * time.Second),
-				Finished: now.Add(-3 * time.Second),
+				Started:  app.Event{ID: startedID, Type: app.EventTypeTaskStarted, TaskName: "test-task", CreatedAt: now.Add(-5 * time.Second)},
+				Finished: app.Event{ID: finishedID, Type: app.EventTypeTaskFinished, TaskName: "test-task", CreatedAt: now.Add(-3 * time.Second)},
 				Duration: 2 * time.Second,
 			},
 			wantErr: assert.NoError,
