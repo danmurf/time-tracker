@@ -36,6 +36,27 @@ func (_m *EventFinder) LatestByName(ctx context.Context, taskName string) (app.E
 	return r0, r1
 }
 
+// LatestByNameType provides a mock function with given fields: ctx, taskName, eventType
+func (_m *EventFinder) LatestByNameType(ctx context.Context, taskName string, eventType app.EventType) (app.Event, error) {
+	ret := _m.Called(ctx, taskName, eventType)
+
+	var r0 app.Event
+	if rf, ok := ret.Get(0).(func(context.Context, string, app.EventType) app.Event); ok {
+		r0 = rf(ctx, taskName, eventType)
+	} else {
+		r0 = ret.Get(0).(app.Event)
+	}
+
+	var r1 error
+	if rf, ok := ret.Get(1).(func(context.Context, string, app.EventType) error); ok {
+		r1 = rf(ctx, taskName, eventType)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 type NewEventFinderT interface {
 	mock.TestingT
 	Cleanup(func())

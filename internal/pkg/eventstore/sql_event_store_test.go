@@ -177,6 +177,105 @@ func TestSQLEventStore_LatestByName(t *testing.T) {
 	}
 }
 
+func TestSQLEventStore_LatestByNameType(t *testing.T) {
+	event1 := app.Event{
+		ID:        uuid.New(),
+		Type:      app.EventTypeTaskStarted,
+		TaskName:  "my-task-1",
+		CreatedAt: time.Now().Add(-10 * time.Minute).Truncate(time.Second).UTC(),
+	}
+	event2 := app.Event{
+		ID:        uuid.New(),
+		Type:      app.EventTypeTaskFinished,
+		TaskName:  "my-task-1",
+		CreatedAt: time.Now().Add(-5 * time.Minute).Truncate(time.Second).UTC(),
+	}
+	event3 := app.Event{
+		ID:        uuid.New(),
+		Type:      app.EventTypeTaskStarted,
+		TaskName:  "my-task-2",
+		CreatedAt: time.Now().Add(-2 * time.Minute).Truncate(time.Second).UTC(),
+	}
+	type args struct {
+		store     []app.Event
+		name      string
+		eventType app.EventType
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    app.Event
+		wantErr assert.ErrorAssertionFunc
+	}{
+		{
+			name: "1 completed task, get the started event",
+			args: args{
+				store:     []app.Event{event1, event2},
+				name:      event1.TaskName,
+				eventType: app.EventTypeTaskStarted,
+			},
+			want:    event1,
+			wantErr: assert.NoError,
+		},
+		{
+			name: "1 completed task, get the finished event",
+			args: args{
+				store:     []app.Event{event1, event2},
+				name:      event1.TaskName,
+				eventType: app.EventTypeTaskFinished,
+			},
+			want:    event2,
+			wantErr: assert.NoError,
+		},
+		{
+			name: "1 started task, try to get the finished event",
+			args: args{
+				store:     []app.Event{event3},
+				name:      event3.TaskName,
+				eventType: app.EventTypeTaskFinished,
+			},
+			want: app.Event{},
+			wantErr: func(t assert.TestingT, err error, i ...interface{}) bool {
+				return assert.True(t,
+					errors.Is(err, app.ErrEventNotFound),
+					fmt.Sprintf("want err [%s]; got [%s]", app.ErrEventNotFound, err),
+				)
+			},
+		},
+		{
+			name: "empty db",
+			args: args{
+				store: []app.Event{},
+				name:  event1.TaskName,
+			},
+			want: app.Event{},
+			wantErr: func(t assert.TestingT, err error, i ...interface{}) bool {
+				return assert.True(t,
+					errors.Is(err, app.ErrEventNotFound),
+					fmt.Sprintf("want err [%s]; got [%s]", app.ErrEventNotFound, err),
+				)
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ctx := context.Background()
+			db := newMemorySqliteDB(t)
+			defer db.Close()
+			sut, err := eventstore.NewSQLEventStore(context.Background(), db)
+			assert.NoError(t, err)
+
+			for _, event := range tt.args.store {
+				assert.NoError(t, sut.Store(ctx, event), "preparing stored test data")
+			}
+
+			got, err := sut.LatestByNameType(ctx, tt.args.name, tt.args.eventType)
+			tt.wantErr(t, err)
+			assert.Equal(t, tt.want, got)
+		})
+	}
+}
+
 func newMemorySqliteDB(t *testing.T) *sql.DB {
 	db, err := sql.Open("sqlite3", ":memory:")
 	if err != nil {

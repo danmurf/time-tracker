@@ -19,3 +19,8 @@ time-tracker start my-task
 ```shell
 time-tracker finish my-task
 ```
+
+## To get the duration of the last completed task
+```shell
+time-tracker lastDuration my-task
+```
