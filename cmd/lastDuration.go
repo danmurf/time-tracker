@@ -23,14 +23,11 @@ package cmd
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
-	"github.com/danmurf/time-tracker/internal/app"
 	"github.com/danmurf/time-tracker/internal/pkg/eventstore"
 	"github.com/danmurf/time-tracker/internal/tasks"
-	"os"
-
 	"github.com/spf13/cobra"
+	"os"
 )
 
 // lastDurationCmd represents the lastDuration command
@@ -43,47 +40,47 @@ time-tracker lastDuration my-task`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) != 1 {
 			cmd.PrintErrln("command usage is `time-tracker start <task-name>`")
-			return
+			os.Exit(1)
 		}
 
 		homeDir, err := os.UserHomeDir()
 		if err != nil {
 			cmd.PrintErrln(fmt.Errorf("finding user home directory: %w", err))
-			return
+			os.Exit(1)
 		}
 
 		dbPath := fmt.Sprintf("%s/%s", homeDir, ".time-tracker")
 		if err = os.MkdirAll(dbPath, os.ModePerm); err != nil {
 			cmd.PrintErrln(fmt.Errorf("creating time tracker directory [%s]: %w", dbPath, err))
-			return
+			os.Exit(1)
 		}
 
 		dbFilePath := fmt.Sprintf("%s/%s", dbPath, "time-tracker.db")
 		db, err := sql.Open("sqlite3", dbFilePath)
 		if err != nil {
 			cmd.PrintErrln(fmt.Errorf("creating database: %w", err))
-			return
+			os.Exit(1)
 		}
 
 		eventStorage, err := eventstore.NewSQLEventStore(cmd.Context(), db)
 		if err != nil {
 			cmd.PrintErrln(fmt.Errorf("creating event store: %w", err))
-			return
+			os.Exit(1)
 		}
 
-		finisher := tasks.NewFinisher(eventStorage, eventStorage)
+		durations := tasks.NewDurations(eventStorage)
 		taskName := args[0]
-		err = finisher.Finish(cmd.Context(), taskName)
-		switch {
-		case !errors.Is(err, app.ErrTaskNotStarted) && err != nil:
-			cmd.PrintErrln(fmt.Errorf("💥 finishing task: %w", err))
-			os.Exit(1)
-		case errors.Is(err, app.ErrTaskNotStarted):
-			cmd.PrintErrln(fmt.Sprintf("👀 %s not in progress", taskName))
+
+		completed, err := durations.FetchLastCompleted(cmd.Context(), taskName)
+		if err != nil {
+			cmd.PrintErrln(fmt.Errorf("fetching completed task: %w", err))
 			os.Exit(1)
 		}
 
-		cmd.Printf("⏱  %s finished.\n", taskName)
+		cmd.Printf(
+			"⏱  %s took %s (started at %s and finished at %s).\n",
+			taskName, completed.Duration, completed.Started.CreatedAt, completed.Finished.CreatedAt,
+		)
 	},
 }
 
